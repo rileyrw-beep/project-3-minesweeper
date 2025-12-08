@@ -35,7 +35,6 @@ void Board::refactorBoard(int y, int x) {
     std::uniform_int_distribution<int> dist(0, 100); // Numbers between 1 and 100 (inclusive)
 
     int numMinesToAddBack = 0;
-    std::cout << "refactoring" << std::endl;
     if (board[y][x]->isMine()) {
         board[y][x].reset(new RegularTile(x, y, configuration));
         numMinesToAddBack++;
@@ -133,7 +132,6 @@ bool Board::revealTiles(int y, int x) {
 
 
     if (board[y][x]->isMine()) {
-        std::cout << "boom" << std::endl;
         return false;
     }
     board[y][x]->revealTile();

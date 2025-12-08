@@ -12,6 +12,7 @@
 #include <memory>
 #include <unordered_map>
 #include "config.hpp"
+#include <iostream>
 #include "Board.hpp"
 #include "Button.hpp"
 #include "PossibleOutcomes.hpp"
@@ -19,10 +20,9 @@
 class LeaderboardWindow {
 public:
     LeaderboardWindow(const sf::Font& font, const config& config);
-    bool Run();
+    void Run();
     void setText(sf::Text& text, float x, float y);
     void readFromFile(); //read into records
-    void printText(sf::RenderWindow window);//go thru testList and print it
     void writeToFile(std::string stringToWrite);//write to file
 
 
@@ -35,7 +35,8 @@ private:
     std::string records;
     std::string currentName;
     std::string filename;
-    std::vector<sf::Text> textList;
+    sf::Text leaderboardText;
+    sf::Text leaderboardContents;
     sf::Font font;
 
 };

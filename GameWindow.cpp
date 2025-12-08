@@ -35,22 +35,20 @@ name(name)
     digitManager[10] = [](sf::Sprite& sprite)->void {
         sprite.setTextureRect(sf::IntRect((210),0,21,32));
     };
-
-    for (const auto& pair : digitManager) {
-        std::cout << "Key: " << pair.first << ", Value: " << std::endl;
-    }
+    clockOffset = 0;
+    gamePausedLastInterval = false;
 }
 
 
 
 void GameWindow::win() {
     //set all remaining tiles to flags - check
-    //set counter to 0;
+    //set counter to 0; - check
     //smiley face turns to sunglasses face - check
     //cant interact with tiles - check
     //cant click on debug or pause - check
-    //CAN click on leaderboard
-    //CAN click on sunglasses face to start new game
+    //CAN click on leaderboard - check
+    //CAN click on sunglasses face to start new game - check
 
     //save current data to leaderboard
     //save the current person for the * in leaderboard
@@ -63,11 +61,13 @@ void GameWindow::win() {
             if (!tile->seeIfFlagged()) tile->toggleFlag();
         }
     }
+
+
 }
 
 void GameWindow::lose() {
-    //smiley becomse dead
-    //all tiles with mines are revealed
+    //smiley becomse dead - check
+    //all tiles with mines are revealed - check
     //mine is revealed ON TOP of flag
     //cant interact with tiles
     //cant click on debug or pause
@@ -90,11 +90,30 @@ void GameWindow::reset() {
     inLeaderboard = false;
     debugOn = false;
     isPaused = false;
-    //reset timer
+    clockOffset = 0;
+    clock.restart();
     //reset counter
     board.resetBoard();
     currentState = PossibleOutcome::ongoing;
     flagsPlaced = 0;
+}
+
+template <std::size_t N>
+void GameWindow::displayCustomNumber(std::array<sf::Sprite, N>& arrTextures, std::string stringNum, sf::RenderWindow &window, int realNum) {
+    std::vector<int> digits;
+    for (size_t i = 0; i < stringNum.length(); i++) {
+        char temp = stringNum.at(i);
+        digits.push_back(std::atoi(&temp));
+    }
+
+    for (size_t i = 0; i < digits.size(); i++) {
+        digitManager[digits.at(i)](arrTextures.at(i));
+        window.draw(arrTextures.at(i));
+    }
+    if (realNum < 0) {
+        digitManager[10](arrTextures[3]);
+        window.draw(arrTextures[3]);
+    }
 }
 
 void GameWindow::displayCounter(sf::RenderWindow &window) {
@@ -103,26 +122,54 @@ void GameWindow::displayCounter(sf::RenderWindow &window) {
         displayNum = 0;
     }
     unsigned int absDisplayNum = abs(displayNum);
-
     std::string stringNum = std::to_string(absDisplayNum);
-    std::vector<int> digits;
-    for (size_t i = 0; i < stringNum.length(); i++) {
-        char temp = stringNum.at(i);
-        digits.push_back(std::atoi(&temp));
+    while (stringNum.size()<3) {
+        stringNum = "0" + stringNum;
     }
     for (size_t i = 0; i < 4; i++) {
         numbersSprite[i].setTexture(numbersTexture);
         numbersSprite[(i+3)%4].setPosition(12+(21*i), 32 * (board.getConfig().rowCount + 0.5) + 16);
     }
-    for (size_t i = 0; i < digits.size(); i++) {
-        digitManager[digits.at(i)](numbersSprite.at(i));
-        window.draw(numbersSprite.at(i));
-    }
-    if (displayNum < 0) {
-        digitManager[10](numbersSprite[3]);
-        window.draw(numbersSprite[3]);
-    }
+    displayCustomNumber(numbersSprite, stringNum, window, displayNum);
+}
 
+void GameWindow::displayClock(sf::RenderWindow &window) {
+    if (gamePausedLastInterval) {
+        gamePausedLastInterval = false;
+        clock.restart();
+    }
+    sf::Time temp = clock.getElapsedTime();
+    if (isPaused || inLeaderboard || currentState != PossibleOutcome::ongoing) {
+        clockOffset += temp.asSeconds();
+        gamePausedLastInterval = true;
+        for (size_t i = 0; i < 2; i++) {
+            window.draw(minutesSprite[i]);
+            window.draw(secondsSprite[i]);
+        }
+        int minutes = clockOffset / 60;
+        int seconds = clockOffset % 60;
+        std::string minutesStr = std::to_string(minutes);
+        std::string secondsStr = std::to_string(seconds);
+        while (minutesStr.size() < 2) {minutesStr = "0" + minutesStr;}
+        while (secondsStr.size() < 2) {secondsStr = "0" + secondsStr;}
+        std::cout << minutes << ":" << seconds << std::endl;
+        return;
+    }
+    int realTime = temp.asSeconds() + clockOffset;
+    int minutes = realTime / 60;
+    int seconds = realTime % 60;
+    std::string minutesStr = std::to_string(minutes);
+    std::string secondsStr = std::to_string(seconds);
+    while (minutesStr.size() < 2) {minutesStr = "0" + minutesStr;}
+    while (secondsStr.size() < 2) {secondsStr = "0" + secondsStr;}
+    for (size_t i = 0; i < 2; i++) {
+        minutesSprite[i].setTexture(numbersTexture);
+        minutesSprite[i].setPosition(board.getConfig().colCount*32-97 + (i*21), 32 * (board.getConfig().rowCount + 0.5) + 16);
+        secondsSprite[i].setTexture(numbersTexture);
+        secondsSprite[i].setPosition(board.getConfig().colCount*32-54 + (i*21), 32 * (board.getConfig().rowCount + 0.5) + 16);
+    }
+    displayCustomNumber(secondsSprite, secondsStr, window, seconds);
+    displayCustomNumber(minutesSprite, minutesStr, window, minutes);
 }
 
 void GameWindow::leftClick(int posX, int posY) {
@@ -130,7 +177,7 @@ void GameWindow::leftClick(int posX, int posY) {
         //smily and leaderboard
         bool sentinle = false;
         toggle(smileyButton, sentinle, posX, posY, "face_happy", &GameWindow::reset);
-        toggle(leaderboardButton, inLeaderboard, posX, posY, "", nullptr); //change to the LeaderBoard.run()
+        toggle(leaderboardButton, inLeaderboard, posX, posY, "", &GameWindow::runLeaderboard); //change to the LeaderBoard.run()
     }
     else if (isPaused) {
         toggle(pauseButton, isPaused, posX, posY, "pause", nullptr);
@@ -156,7 +203,7 @@ void GameWindow::leftClick(int posX, int posY) {
             return PossibleOutcome::ongoing;
         });
         toggle(pauseButton, isPaused, posX, posY, "play", nullptr);
-        toggle(leaderboardButton, inLeaderboard, posX, posY, "", nullptr);
+        toggle(leaderboardButton, inLeaderboard, posX, posY, "", &GameWindow::runLeaderboard);
 
     }
 }
@@ -171,6 +218,11 @@ void GameWindow::rightClick(int posX, int posY) {
             return PossibleOutcome::ongoing;
         });
     }
+}
+
+
+void GameWindow::runLeaderboard() {
+    leaderboard.Run();
 }
 
 
@@ -195,7 +247,6 @@ void GameWindow::displayButtons(sf::RenderWindow &window) {
 
 
 bool GameWindow::Run() {
-    std::cout << "running" << std::endl;
 
     //game loop
     while (gameWindow.isOpen()) {
@@ -236,6 +287,7 @@ bool GameWindow::Run() {
         displayButtons(gameWindow);
 
         //timer
+        displayClock(gameWindow);
 
         //counter
         displayCounter(gameWindow);
