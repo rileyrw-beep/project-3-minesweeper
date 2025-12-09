@@ -34,7 +34,7 @@ protected:
 public:
     Tile(std::size_t x, std::size_t y, const config& config);
 
-    virtual bool displayTile(sf::RenderWindow& window, bool debugOn, bool isPaused) = 0;
+    virtual bool displayTile(sf::RenderWindow& window, bool debugOn, bool isPaused, bool inLeaderboard) = 0;
     void revealTile();
     virtual bool isMine() = 0;
     void setAdjacentMinesNumber(const short& x);
@@ -56,7 +56,7 @@ class RegularTile : public Tile {
 public:
     RegularTile(std::size_t x, std::size_t y, const config& config);
 
-    bool displayTile(sf::RenderWindow& window, bool debugOn, bool isPaused) override;
+    bool displayTile(sf::RenderWindow& window, bool debugOn, bool isPaused, bool inLeaderboard) override;
     bool isMine() override;
 
     ~RegularTile() override = default;
@@ -73,7 +73,7 @@ class Mine : public Tile {
 public:
     Mine(std::size_t x, std::size_t y, const config& config);
 
-    bool displayTile(sf::RenderWindow& window, bool debugOn, bool isPaused) override;
+    bool displayTile(sf::RenderWindow& window, bool debugOn, bool isPaused, bool inLeaderboard) override;
     bool isMine() override;
 
 

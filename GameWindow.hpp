@@ -32,7 +32,7 @@ public:
     void toggle(Button& button, bool& b, int x, int y, const std::string& fName, void(GameWindow::*action)());
     void reset();
     void displayCounter(sf::RenderWindow &window);
-    void displayClock(sf::RenderWindow &window);
+    std::pair<std::string, std::string> displayClock(sf::RenderWindow &window);
     void runLeaderboard();
 
 
@@ -64,7 +64,7 @@ private:
     bool gamePausedLastInterval;
     std::array<sf::Sprite, 2> minutesSprite;
     std::array<sf::Sprite, 2> secondsSprite;
-    std::pair<int, int> currentTime;
+    std::pair<std::string, std::string> currentTime;
 
 
     //so I wanted to get a little fancy and my current idea is the thing that manages whether the game has ended or not

@@ -54,14 +54,14 @@ void GameWindow::win() {
     //save the current person for the * in leaderboard
 
 
-
+    debugOn = false;
     smileyButton.updateGraphic("face_win");
     for (auto& row : board.getBoard()) {
         for (auto& tile : row) {
             if (!tile->seeIfFlagged()) tile->toggleFlag();
         }
     }
-
+    leaderboard.addNewRecord(std::make_pair(currentTime, name));
 
 }
 
@@ -133,7 +133,7 @@ void GameWindow::displayCounter(sf::RenderWindow &window) {
     displayCustomNumber(numbersSprite, stringNum, window, displayNum);
 }
 
-void GameWindow::displayClock(sf::RenderWindow &window) {
+std::pair<std::string, std::string> GameWindow::displayClock(sf::RenderWindow &window) {
     if (gamePausedLastInterval) {
         gamePausedLastInterval = false;
         clock.restart();
@@ -152,8 +152,8 @@ void GameWindow::displayClock(sf::RenderWindow &window) {
         std::string secondsStr = std::to_string(seconds);
         while (minutesStr.size() < 2) {minutesStr = "0" + minutesStr;}
         while (secondsStr.size() < 2) {secondsStr = "0" + secondsStr;}
-        std::cout << minutes << ":" << seconds << std::endl;
-        return;
+
+        return make_pair(minutesStr, secondsStr);
     }
     int realTime = temp.asSeconds() + clockOffset;
     int minutes = realTime / 60;
@@ -170,6 +170,7 @@ void GameWindow::displayClock(sf::RenderWindow &window) {
     }
     displayCustomNumber(secondsSprite, secondsStr, window, seconds);
     displayCustomNumber(minutesSprite, minutesStr, window, minutes);
+    return make_pair(minutesStr, secondsStr);
 }
 
 void GameWindow::leftClick(int posX, int posY) {
@@ -177,7 +178,7 @@ void GameWindow::leftClick(int posX, int posY) {
         //smily and leaderboard
         bool sentinle = false;
         toggle(smileyButton, sentinle, posX, posY, "face_happy", &GameWindow::reset);
-        toggle(leaderboardButton, inLeaderboard, posX, posY, "", &GameWindow::runLeaderboard); //change to the LeaderBoard.run()
+        toggle(leaderboardButton, inLeaderboard, posX, posY, "", nullptr); //change to the LeaderBoard.run()
     }
     else if (isPaused) {
         toggle(pauseButton, isPaused, posX, posY, "pause", nullptr);
@@ -203,7 +204,7 @@ void GameWindow::leftClick(int posX, int posY) {
             return PossibleOutcome::ongoing;
         });
         toggle(pauseButton, isPaused, posX, posY, "play", nullptr);
-        toggle(leaderboardButton, inLeaderboard, posX, posY, "", &GameWindow::runLeaderboard);
+        toggle(leaderboardButton, inLeaderboard, posX, posY, "", nullptr);
 
     }
 }
@@ -222,7 +223,7 @@ void GameWindow::rightClick(int posX, int posY) {
 
 
 void GameWindow::runLeaderboard() {
-    leaderboard.Run();
+    leaderboard.Run(currentState, inLeaderboard);
 }
 
 
@@ -273,26 +274,30 @@ bool GameWindow::Run() {
         std::uint32_t count = 0;
         for (size_t i = 0; i < board.getBoard().size(); i++) {
             for (size_t j = 0; j < board.getBoard()[i].size(); j++) {
-                board.getBoard()[i][j]->displayTile(gameWindow, debugOn, isPaused);
+                board.getBoard()[i][j]->displayTile(gameWindow, debugOn, isPaused, inLeaderboard);
                 if (!board.getBoard()[i][j]->isMine() && board.getBoard()[i][j]->hasBeenRevealed()) count++;
             }
         }
         if (count == board.getConfig().colCount * board.getConfig().rowCount - board.getConfig().bombCount) currentState = PossibleOutcome::win;
 
-        if (outcomeManager[currentState] != nullptr) {
-            (this->*outcomeManager[currentState])();
-        }
-
         //buttons
         displayButtons(gameWindow);
 
         //timer
-        displayClock(gameWindow);
+        currentTime = displayClock(gameWindow);
 
         //counter
         displayCounter(gameWindow);
 
         gameWindow.display();
+
+        if (inLeaderboard) {
+            runLeaderboard();
+        }
+
+        if (outcomeManager[currentState] != nullptr) {
+            (this->*outcomeManager[currentState])();
+        }
     }
     return false;
 }

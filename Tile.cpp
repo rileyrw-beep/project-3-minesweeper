@@ -74,10 +74,10 @@ bool RegularTile::isMine() {
 }
 
 
-bool RegularTile::displayTile(sf::RenderWindow& window, bool debugOn, bool isPaused) {
+bool RegularTile::displayTile(sf::RenderWindow& window, bool debugOn, bool isPaused, bool inLeaderboard) {
     window.draw(revealedLayer);
 
-    if (isPaused) {
+    if (isPaused || inLeaderboard) {
         return true;
     }
 
@@ -109,9 +109,9 @@ bool Mine::isMine() {
 }
 
 
-bool Mine::displayTile(sf::RenderWindow& window, bool debugOn, bool isPaused) {
+bool Mine::displayTile(sf::RenderWindow& window, bool debugOn, bool isPaused, bool inLeaderboard) {
     window.draw(revealedLayer);
-    if (isPaused) {
+    if (isPaused || inLeaderboard) {
         return true;
     }
     if (!isRevealed) {

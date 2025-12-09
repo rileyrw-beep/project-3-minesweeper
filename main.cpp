@@ -8,13 +8,7 @@
 #include "GameWindow.hpp"
 
 
-
-
-
-
-
-    auto main()->int {
-
+auto main() -> int {
     //set up the config struct
     config config{};
     std::ifstream in("files/config.cfg");
@@ -43,4 +37,3 @@
 
     return 0;
 }
-
