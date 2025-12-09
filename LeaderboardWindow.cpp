@@ -106,6 +106,7 @@ void LeaderboardWindow::readFromFile(const PossibleOutcome &currentState) {
     size_t targetIndex = 0;
     size_t count = 0;
     unsigned int startingNumber = 1;
+    bool hasNotBeenFoundYet = true;
     for (char c: records) {
         if (c == ' ' || c == '\n' || c == ',') {
             currentWord = "";
@@ -123,8 +124,9 @@ void LeaderboardWindow::readFromFile(const PossibleOutcome &currentState) {
             desiredWord.append(std::to_string(startingNumber));
             desiredWord.append(".\t");
         }
-        if (currentWord == currentName) {
+        if (currentWord == currentName && hasNotBeenFoundYet) {
             targetIndex = count;
+            hasNotBeenFoundYet = false;
         }
         count++;
     }
