@@ -62,6 +62,7 @@ private:
     sf::Clock clock;
     int clockOffset;
     bool gamePausedLastInterval;
+    bool gameStarted;
     std::array<sf::Sprite, 2> minutesSprite;
     std::array<sf::Sprite, 2> secondsSprite;
     std::pair<std::string, std::string> currentTime;

@@ -37,6 +37,7 @@ name(name)
     };
     clockOffset = 0;
     gamePausedLastInterval = false;
+    gameStarted = false;
 }
 
 
@@ -92,6 +93,7 @@ void GameWindow::reset() {
     isPaused = false;
     clockOffset = 0;
     clock.restart();
+    gameStarted = false;
     //reset counter
     board.resetBoard();
     currentState = PossibleOutcome::ongoing;
@@ -134,6 +136,18 @@ void GameWindow::displayCounter(sf::RenderWindow &window) {
 }
 
 std::pair<std::string, std::string> GameWindow::displayClock(sf::RenderWindow &window) {
+    // If game hasn't started yet, display 00:00
+    if (!gameStarted) {
+        for (size_t i = 0; i < 2; i++) {
+            minutesSprite[i].setTexture(numbersTexture);
+            minutesSprite[i].setPosition(board.getConfig().colCount*32-97 + (i*21), 32 * (board.getConfig().rowCount + 0.5) + 16);
+            secondsSprite[i].setTexture(numbersTexture);
+            secondsSprite[i].setPosition(board.getConfig().colCount*32-54 + (i*21), 32 * (board.getConfig().rowCount + 0.5) + 16);
+        }
+        displayCustomNumber(secondsSprite, "00", window, 0);
+        displayCustomNumber(minutesSprite, "00", window, 0);
+        return std::make_pair("00", "00");
+    }
     if (gamePausedLastInterval) {
         gamePausedLastInterval = false;
         clock.restart();
@@ -198,6 +212,10 @@ void GameWindow::leftClick(int posX, int posY) {
         toggle(smileyButton, sentinle, posX, posY, "face_happy", &GameWindow::reset);
         toggle(debugButton, debugOn, posX, posY, "", nullptr);
         currentState = board.mousePressed(posX, posY, [&](size_t i, size_t j)->PossibleOutcome {
+            if (!gameStarted) {
+                gameStarted = true;
+                clock.restart();
+            }
             if (!board.revealTiles(i, j)) {
                 return PossibleOutcome::lose;
             }
